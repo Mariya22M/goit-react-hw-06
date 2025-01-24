@@ -1,0 +1,27 @@
+.contactInfo {
+    display: flex;
+    flex-wrap: wrap;
+
+    span {
+        width: 100%;
+    }
+
+    align-items: center;
+}
+
+.delete {
+    background-color: var(--red);
+    padding: 6px 8px;
+    height: fit-content;
+    border-radius: 4px;
+    border: 1px solid var(--grey);
+    cursor: pointer;
+    transition: color var(--animation), background-color var(--animation),
+        box-shadow var(--animation);
+
+    &:hover {
+        background-color: var(--hred);
+        color: white;
+        box-shadow: 2px 2px 4px red;
+    }
+}

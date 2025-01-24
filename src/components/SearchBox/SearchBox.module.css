@@ -1,0 +1,14 @@
+.searchBox {
+    width: 400px;
+
+    input {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid var(--grey);
+
+        &:focus-within {
+            border-color: var(--gold);
+        }
+    }
+}

@@ -1,0 +1,15 @@
+.contacList {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+
+    li {
+        border: 1px solid var(--grey);
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--green);
+    }
+}
