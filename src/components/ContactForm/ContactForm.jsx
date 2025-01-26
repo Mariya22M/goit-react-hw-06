@@ -2,59 +2,80 @@ import { Field, Form, Formik, ErrorMessage } from "formik";
 import { useId } from "react";
 import * as Yup from "yup";
 import css from "./ContactForm.module.css";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addContact } from "../../redux/contactsSlice";
 
 const ContactForm = () => {
-	const id = useId();
-	const dispatch = useDispatch();
+  const id = useId(); // Унікальний ідентифікатор для атрибутів id
+  const dispatch = useDispatch(); // Диспатч для Redux
+  const contacts = useSelector((state) => state.contacts); // Доступ до контактів у Redux-стані
 
-	const initialValues = {
-		name: "",
-		number: "",
-	};
+  const initialValues = {
+    name: "",
+    number: "",
+  };
 
-	const handleSubmit = (values, actions) => {
-		dispatch(
-			addContact({
-				id: crypto.randomUUID(),
-				name: values.name,
-				number: values.number,
-			})
-		);
-		actions.resetForm();
-	};
+  const handleSubmit = (values, actions) => {
+    // Перевірка на дублювання контактів
+    const isDuplicate = contacts.some(
+      (contact) =>
+        contact.name.toLowerCase() === values.name.toLowerCase() ||
+        contact.number === values.number
+    );
 
-	const phoneRegex = /\d{3}-\d{2}-\d{2}/;
-	const validationSchema = Yup.object().shape({
-		name: Yup.string()
-			.min(3, "Name must be at least 3 characters")
-			.max(50, "Name must be 50 characters or less")
-			.required("Name is required"),
-		number: Yup.string()
-			.matches(phoneRegex, "Invalid phone number")
-			.required("Phone number is required"),
-	});
+    if (isDuplicate) {
+      alert("This contact already exists!"); // Виведення попередження
+      return;
+    }
 
-	return (
-		<Formik
-			initialValues={initialValues}
-			onSubmit={handleSubmit}
-			validationSchema={validationSchema}
-		>
-			<Form className={css.form}>
-				<label htmlFor={`${id}-name`}>Name</label>
-				<Field type="text" name="name" id={`${id}-name`} />
-				<ErrorMessage name="name" component="span" />
+    // Додавання контакту до Redux-стану
+    dispatch(
+      addContact({
+        id: crypto.randomUUID(), // Генерація унікального id
+        name: values.name,
+        number: values.number,
+      })
+    );
+    actions.resetForm(); // Скидання форми після додавання контакту
+  };
 
-				<label htmlFor={`${id}-number`}>Number</label>
-				<Field type="tel" name="number" id={`${id}-number`} />
-				<ErrorMessage name="number" component="span" />
+  const phoneRegex = /^\d{3}-\d{2}-\d{2}$/; // Регулярний вираз для перевірки номера телефону
+  const validationSchema = Yup.object().shape({
+    name: Yup.string()
+      .min(3, "Name must be at least 3 characters") // Мінімальна довжина
+      .max(50, "Name must be 50 characters or less") // Максимальна довжина
+      .required("Name is required"), // Поле обов'язкове
+    number: Yup.string()
+      .matches(phoneRegex, "Invalid phone number (format: 123-45-67)") // Валідація за форматом
+      .required("Phone number is required"), // Поле обов'язкове
+  });
 
-				<button type="submit">Add contact</button>
-			</Form>
-		</Formik>
-	);
+  return (
+    <Formik
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      validationSchema={validationSchema}
+    >
+      {() => (
+        <Form className={css.form}>
+          {/* Поле для введення імені */}
+          <label htmlFor={`${id}-name`}>Name</label>
+          <Field type="text" name="name" id={`${id}-name`} />
+          <ErrorMessage name="name" component="span" className={css.error} />
+
+          {/* Поле для введення номера телефону */}
+          <label htmlFor={`${id}-number`}>Number</label>
+          <Field type="tel" name="number" id={`${id}-number`} />
+          <ErrorMessage name="number" component="span" className={css.error} />
+
+          {/* Кнопка для додавання контакту */}
+          <button type="submit" className={css.button}>
+            Add contact
+          </button>
+        </Form>
+      )}
+    </Formik>
+  );
 };
 
 export default ContactForm;
