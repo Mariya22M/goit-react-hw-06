@@ -6,9 +6,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { addContact } from "../../redux/contactsSlice";
 
 const ContactForm = () => {
-  const id = useId(); // Унікальний ідентифікатор для атрибутів id
+  const id = useId(); // Унікальний ID для атрибутів форми
   const dispatch = useDispatch(); // Диспатч для Redux
-  const contacts = useSelector((state) => state.contacts); // Доступ до контактів у Redux-стані
+  const contacts = useSelector((state) => state.contacts.items); // Отримуємо всі контакти з Redux
 
   const initialValues = {
     name: "",
@@ -16,38 +16,40 @@ const ContactForm = () => {
   };
 
   const handleSubmit = (values, actions) => {
-    // Перевірка на дублювання контактів
-    const isDuplicate = contacts.some(
-      (contact) =>
-        contact.name.toLowerCase() === values.name.toLowerCase() ||
-        contact.number === values.number
+    const { name, number } = values;
+
+    // Перевіряємо, чи контакт уже існує
+    const duplicate = contacts.find(
+      (contact) => contact.name.toLowerCase() === name.toLowerCase()
     );
 
-    if (isDuplicate) {
-      alert("This contact already exists!"); // Виведення попередження
+    if (duplicate) {
+      alert(`${name} is already in contacts.`);
+      actions.setSubmitting(false);
       return;
     }
 
-    // Додавання контакту до Redux-стану
+    // Відправляємо новий контакт у Redux
     dispatch(
       addContact({
-        id: crypto.randomUUID(), // Генерація унікального id
-        name: values.name,
-        number: values.number,
+        id: crypto.randomUUID(), // Унікальний ID контакту
+        name,
+        number,
       })
     );
-    actions.resetForm(); // Скидання форми після додавання контакту
+
+    actions.resetForm(); // Скидаємо форму після успішного додавання
   };
 
-  const phoneRegex = /^\d{3}-\d{2}-\d{2}$/; // Регулярний вираз для перевірки номера телефону
+  const phoneRegex = /^\d{3}-\d{2}-\d{2}$/; // Регулярний вираз для номера телефону
   const validationSchema = Yup.object().shape({
     name: Yup.string()
-      .min(3, "Name must be at least 3 characters") // Мінімальна довжина
-      .max(50, "Name must be 50 characters or less") // Максимальна довжина
-      .required("Name is required"), // Поле обов'язкове
+      .min(3, "Name must be at least 3 characters")
+      .max(50, "Name must be 50 characters or less")
+      .required("Name is required"),
     number: Yup.string()
-      .matches(phoneRegex, "Invalid phone number (format: 123-45-67)") // Валідація за форматом
-      .required("Phone number is required"), // Поле обов'язкове
+      .matches(phoneRegex, "Invalid phone number (format: 123-45-67)")
+      .required("Phone number is required"),
   });
 
   return (
@@ -56,20 +58,21 @@ const ContactForm = () => {
       onSubmit={handleSubmit}
       validationSchema={validationSchema}
     >
-      {() => (
+      {({ isSubmitting }) => (
         <Form className={css.form}>
-          {/* Поле для введення імені */}
           <label htmlFor={`${id}-name`}>Name</label>
           <Field type="text" name="name" id={`${id}-name`} />
           <ErrorMessage name="name" component="span" className={css.error} />
 
-          {/* Поле для введення номера телефону */}
           <label htmlFor={`${id}-number`}>Number</label>
           <Field type="tel" name="number" id={`${id}-number`} />
           <ErrorMessage name="number" component="span" className={css.error} />
 
-          {/* Кнопка для додавання контакту */}
-          <button type="submit" className={css.button}>
+          <button
+            type="submit"
+            className={css.button}
+            disabled={isSubmitting} // Деактивація кнопки під час відправки
+          >
             Add contact
           </button>
         </Form>
